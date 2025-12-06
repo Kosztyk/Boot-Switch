@@ -1,4 +1,4 @@
-Step 1. On ProxmoxServer host, do: 
+# Step 1. On ProxmoxServer host, do: 
 
 mkdir -p /opt/boot-switch
 mkdir -p /opt/boot-switch/public
@@ -12,7 +12,7 @@ apt install -y efibootmgr nodejs npm
 npm init -y
 npm install express
 
-Step 2. Then test:
+# Step 2. Then test:
 
 cd /opt/boot-switch
 
@@ -22,7 +22,7 @@ Open in browser:
 
 http://<pve-ip>:8088/
 
-Step 3. Make it a systemd service (autostart)
+# Step 3. Make it a systemd service (autostart)
 
 nano /etc/systemd/system/boot-switch.service
 
