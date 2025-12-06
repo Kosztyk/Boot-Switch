@@ -24,6 +24,9 @@ The app uses `efibootmgr -v` to:
 > - This must run on the host in **UEFI mode**.
 > - The service must have sufficient privileges (normally **root**) to call `efibootmgr` and `reboot`.
 > - Use at your own risk – changing boot entries can make your system unbootable if misused.
+>
+> <img width="792" height="695" alt="image" src="https://github.com/user-attachments/assets/e4cafd8b-1b7d-412a-8b6a-62402b753df0" />
+
 
 ---
 
