@@ -1,0 +1,17 @@
+{
+  "name": "boot-switch-windows",
+  "version": "1.0.0",
+  "description": "EFI firmware boot selector web UI for Windows (bcdedit-based)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "build:exe": "pkg app.js --target node18-win-x64 --output boot-switch.exe"
+  },
+  "dependencies": {
+    "express": "^4.22.1",
+    "js-yaml": "^4.1.1"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.0"
+  }
+}
