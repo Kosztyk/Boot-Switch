@@ -212,7 +212,9 @@ Now the app will:
 4. Click a button to set that entry as **BootNext** and immediately reboot to it.
 
 ---
-## For Windows just download the boot-switch-setup.exe from windows folder and install it.
+## For Windows:
+
+just download the boot-switch-setup.exe from windows folder and install it.
 
 ## Notes & Caveats
 
