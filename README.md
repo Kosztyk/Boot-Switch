@@ -226,6 +226,4 @@ Now the app will:
 
 ---
 
-## License
 
-Choose whatever you prefer here (MIT, Apache 2.0, etc.) and add the appropriate text.
