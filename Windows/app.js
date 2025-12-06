@@ -673,8 +673,20 @@ app.post("/boot/:id", (req, res) => {
   runCommand(cmd, res, targetLabel);
 });
 
-// ---------- start ----------
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Windows boot switch listening on http://localhost:${PORT}`);
+// Start server with defensive error handler
+const server = app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Boot switch listening on http://0.0.0.0:${PORT}`);
 });
+
+server.on("error", (err) => {
+  if (err && err.code === "EADDRINUSE") {
+    console.error(`Port ${PORT} is already in use. Not starting a second instance.`);
+    // Exit with 0 so Task Scheduler doesn't treat this as a failure
+    process.exit(0);
+  } else {
+    console.error("Unhandled server error:", err);
+    // Non-zero so we see real problems
+    process.exit(1);
+  }
+});
+
