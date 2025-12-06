@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 8088;
 const CONFIG_PATH = path.join(APP_DIR, "config.yaml");
 
 // GUID validator: {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
-const GUID_RE = /^\{[0-9A-Fa-f-]+\}$/;
+const GUID_RE = /^\{([0-9A-Fa-f-]+|bootmgr)\}$/i;
 
 // ---------- initial bootstrap (folders + config + favicon) ----------
 
@@ -117,9 +117,12 @@ function simplifyLabel(description, header) {
 
 // ---------- parse `bcdedit /enum firmware` ----------
 //
-// We keep only "Firmware Application" blocks and pull:
-//  - identifier {GUID}
-//  - description (if present)
+// We keep:
+//   - "Firmware Application" blocks
+//   - the "Windows Boot Manager" block
+// and pull:
+//   - identifier {GUID} or {bootmgr}
+//   - description (if present)
 //
 function parseBcdFirmware(output) {
   const lines = output.split("\n").map((l) => l.replace(/\r$/, "").trim());
@@ -127,13 +130,13 @@ function parseBcdFirmware(output) {
 
   let currentHeader = null;
   let currentLines = [];
-  let inFirmwareAppBlock = false;
+  let currentType = null; // "firmwareApp" | "windowsBootMgr" | null
 
   function flushBlock() {
-    if (!inFirmwareAppBlock || currentLines.length === 0) {
+    if (!currentType || currentLines.length === 0) {
       currentHeader = null;
       currentLines = [];
-      inFirmwareAppBlock = false;
+      currentType = null;
       return;
     }
 
@@ -141,7 +144,7 @@ function parseBcdFirmware(output) {
     let description = null;
 
     for (const line of currentLines) {
-      // identifier              {GUID}
+      // identifier              {GUID} or {bootmgr}
       let m = line.match(/^identifier\s+(.+)$/i);
       if (m) {
         id = m[1].trim();
@@ -155,6 +158,11 @@ function parseBcdFirmware(output) {
       }
     }
 
+    // For Windows Boot Manager, if description missing, synthesize one
+    if (!description && currentType === "windowsBootMgr") {
+      description = "Windows Boot Manager";
+    }
+
     if (id && GUID_RE.test(id)) {
       entries.push({
         id,
@@ -165,7 +173,7 @@ function parseBcdFirmware(output) {
 
     currentHeader = null;
     currentLines = [];
-    inFirmwareAppBlock = false;
+    currentType = null;
   }
 
   for (const line of lines) {
@@ -174,15 +182,34 @@ function parseBcdFirmware(output) {
       continue;
     }
 
+    // Start of a Firmware Application block
     if (line.startsWith("Firmware Application")) {
       flushBlock();
       currentHeader = line;
       currentLines = [];
-      inFirmwareAppBlock = true;
+      currentType = "firmwareApp";
       continue;
     }
 
-    if (inFirmwareAppBlock) {
+    // Start of the Windows Boot Manager block
+    if (line.startsWith("Windows Boot Manager")) {
+      flushBlock();
+      currentHeader = line;
+      currentLines = [];
+      currentType = "windowsBootMgr";
+      continue;
+    }
+
+    // Ignore "Firmware Boot Manager" (that is {fwbootmgr}, not a boot target)
+    if (line.startsWith("Firmware Boot Manager")) {
+      flushBlock();
+      currentHeader = null;
+      currentLines = [];
+      currentType = null;
+      continue;
+    }
+
+    if (currentType) {
       currentLines.push(line);
     }
   }
@@ -190,6 +217,7 @@ function parseBcdFirmware(output) {
 
   return entries;
 }
+
 
 // ---------- express setup ----------
 
